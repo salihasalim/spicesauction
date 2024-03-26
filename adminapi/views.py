@@ -3,9 +3,11 @@ from django.contrib import messages
 from django.views.generic import CreateView,View,TemplateView,ListView,UpdateView,DetailView
 from django.contrib.auth import authenticate, login,logout
 from django.utils.decorators import method_decorator
+from django.db.models import Count
+from datetime import date
 
 
-from adminapi.models import Spice,Seller,Bid
+from adminapi.models import Spice,Seller,Bid,Feedbacks,Auction,Payment
 
 
 def signin_required(fn):    
@@ -51,16 +53,64 @@ class SignInView(View):
     
 
 @method_decorator(decs,name="dispatch")   
-class HomeView(TemplateView):
-    template_name="home.html"
+class HomeView(ListView):
+    template_name = "home.html"
+    model = Bid
+    context_object_name = "bids" 
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['bids_count'] = Bid.objects.aggregate(count=Count('id'))['count']
+        today = date.today()
+        context['todays_bids_count'] = Bid.objects.filter(timestamp__date=today).count()
+        context['users_count'] = Seller.objects.all().count()
+        return context 
     
 @method_decorator(decs,name="dispatch") 
 class BidsView(ListView):
     template_name="bids.html"
     model=Bid
-    context_object_name="bids"
+    context_object_name="bids"    
+    
+    
+@method_decorator(decs,name="dispatch") 
+class ProductsView(ListView):
+    template_name="products.html"
+    model=Spice
+    context_object_name="spices"
+    
+    
+@method_decorator(decs,name="dispatch") 
+class AuctionsView(ListView):
+    template_name="auctions.html"
+    model=Auction
+    context_object_name="auctions"
+    
+    
+@method_decorator(decs,name="dispatch") 
+class CustomerView(ListView):
+    template_name="customers.html"
+    model=Seller
+    context_object_name="sellers"
+    
+    
+@method_decorator(decs,name="dispatch") 
+class PaymentsView(ListView):
+    template_name="payments.html"
+    model=Payment
+    context_object_name="payments"
+    
+    
+    
+@method_decorator(decs,name="dispatch") 
+class FeedbacksView(ListView):
+    template_name="feedbacks.html"
+    model=Feedbacks
+    context_object_name="feedbacks"     
+    
     
     
 def signoutview(request,*args,**kwargs):
     logout(request)
     return redirect("signin")
+

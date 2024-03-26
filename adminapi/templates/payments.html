@@ -21,7 +21,6 @@
                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Bidder</th>
                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Amount</th>
                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">TimeStamp</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Is_selected</th>
                     <th class="text-secondary opacity-7"></th>
                   </tr>
                 </thead>
@@ -32,7 +31,7 @@
                             <td>
                             <div class="d-flex px-2 py-1">
                                 <div>
-                                <img src="{{bid.auction.spice.image.url}}" class="avatar avatar-lg me-3 border-radius-lg">
+                                <img src="{{bid.auction.spice.image}}" class="avatar avatar-lg me-3 border-radius-lg">
                                 </div>
                                 <div class="d-flex flex-column justify-content-center">
                                 <h6 class="mb-0 text-sm">{{bid.auction.spice.name}}</h6>
@@ -43,13 +42,10 @@
                             <p class="text-xs font-weight-bold mb-0">{{bid.bidder.name}}</p>
                             </td>
                             <td class="align-middle text-center text-sm">
-                            <span class="badge badge-sm bg-gradient-success">Rs. {{bid.amount}}</span>
+                            <span class="badge badge-sm bg-gradient-success">{{bid.amount}}</span>
                             </td>
                             <td class="align-middle text-center">
                             <span class="text-secondary text-xs font-weight-bold">{{bid.timestamp}}</span>
-                            </td>
-                            <td class="align-middle text-center">
-                              <span class="text-secondary text-xs font-weight-bold">{{bid.is_selected}}</span>
                             </td>
                         </tr>
                     {%endfor%}
