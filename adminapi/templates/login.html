@@ -266,6 +266,14 @@ html,body {
 			visibility: visible;
 			-webkit-transition: all .3s ease;
 		}
+		.customerlogin{
+			margin-top: 30px;
+			font-size: 10px;
+			font-weight: bold;
+			cursor: pointer;
+			opacity: 0.6;
+
+		}
 	}
 }
 </style>
@@ -282,6 +290,7 @@ html,body {
                 </div>
                 <button type="submit" class="submit-btn">Log in</button>
             </form>
+			<h6 class="customerlogin">back to customer login?<a href="{%url 'loginpage'%}">login now</a></h6>
         </div>
     </div>
 </div>

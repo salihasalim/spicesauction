@@ -8,10 +8,10 @@ from django.views.generic import CreateView,FormView,ListView,UpdateView,DetailV
 
 
 def homepage(request):
-    return render (request,"home.html")
+    return render (request,"user/home.html")
 
 def loginpage(request):
-     return render(request,"loginpage.html")
+     return render(request,"user/loginpage.html")
 
 
 def saveuser(request):
@@ -46,7 +46,7 @@ def login_user(request):
     
 # @method_decorator(decs,name="dispatch")
 class SpiceListView(ListView):
-    template_name="home.html"    
+    template_name="user/home.html"    
     model=Spice
     context_object_name="spices"   
           
