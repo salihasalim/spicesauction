@@ -27,10 +27,10 @@ class Seller(CustomUser):
         return self.name
 
 class Spice(models.Model):
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     stock_quantity = models.PositiveIntegerField(default=0)
-    price = models.PositiveIntegerField()
     image = models.ImageField(upload_to="images", null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     choices= [ 

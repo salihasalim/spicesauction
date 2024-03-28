@@ -14,7 +14,7 @@ def signin_required(fn):
     def wrapper(request,*args,**kwargs):
         if not request.user.is_authenticated:
             messages.error(request,"invalid session!..please login")
-            return redirect("signin")
+            return redirect("adminsignin")
         else:
             return fn(request,*args,**kwargs)
     return wrapper
@@ -23,7 +23,7 @@ def is_admin(fn):
     def wrapper(request,*args,**kwargs):
         if not request.user.is_superuser:
             messages.error(request,"Permission denied for current user !")
-            return redirect("signin")
+            return redirect("adminsignin")
         else:
             return fn(request,*args,**kwargs)
     return wrapper
@@ -112,5 +112,5 @@ class FeedbacksView(ListView):
     
 def signoutview(request,*args,**kwargs):
     logout(request)
-    return redirect("signin")
+    return redirect("adminsignin")
 
