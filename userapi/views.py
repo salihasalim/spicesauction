@@ -129,15 +129,15 @@ class BidAddView(CreateView):
     def form_valid(self, form):
         seller_instance = get_object_or_404(Seller, pk=self.request.user.id)
         id=self.kwargs.get("pk")
-        spice=Spice.objects.get(id=id)
-        form.instance.auctioneer = seller_instance
-        form.instance.spice = spice
-        messages.success(self.request, "Auction added successfully")
+        auction=Auction.objects.get(id=id)
+        form.instance.bidder = seller_instance
+        form.instance.auction = auction
+        messages.success(self.request, "Bid added successfully")
         return super().form_valid(form)
 
     
     def form_invalid(self, form):
-        messages.error(self.request, "Auction adding failed")
+        messages.error(self.request, "Bid adding failed")
         return super().form_invalid(form)
           
 
