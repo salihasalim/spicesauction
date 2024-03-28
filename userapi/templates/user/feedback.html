@@ -1,0 +1,31 @@
+{%extends 'user/base.html'%}
+{%load static%}
+{%block body_block%}
+
+<style>
+    body {
+        background-color: #f2f2f2; /* Set the background color to grey */
+    }
+    .form-box {
+        display: block;
+        width: 510px;
+        height: auto;
+        background: #fff;
+        margin: 0 auto;
+        padding: 10px 17px;
+        -webkit-box-shadow: 2px 2px 3px -1px rgba(0,0,0,0.35);
+        margin: 0 auto;
+        font-size: 15px;
+        border-radius: 7px;
+    }  
+</style>
+
+<div class="p-5 form-box border border-dark text-dark" style="margin-top:170px;">
+    <form action="" method="post" enctype="multipart/form-data">
+        {%csrf_token%}
+        {{form.as_p}}
+        <input type="submit" value="Add Feedback" class="form-control btn btn-outline-dark">
+    </form>
+</div>
+
+{%endblock%}

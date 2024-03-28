@@ -1,10 +1,10 @@
 from django.shortcuts import render,redirect
 from django.views import View
-from adminapi.models import Seller,Spice,Bid,Auction,Payment
+from adminapi.models import Seller,Spice,Bid,Auction,Payment,Feedbacks
 from django.contrib import messages
 from django.views.generic import CreateView,FormView,ListView,UpdateView,DetailView,TemplateView
 from django.urls import reverse_lazy
-from userapi.forms import RegForm,LoginForm,AddProducts,AddAuction,AddBid
+from userapi.forms import RegForm,LoginForm,AddProducts,AddAuction,AddBid,AddFeedback
 from django.contrib.auth import authenticate,login,logout
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
@@ -57,7 +57,6 @@ class AuctionsListView(ListView):
         return Auction.objects.filter(status='Available')  
     
 
-# @method_decorator(decs,name="dispatch")
 class BidsListView(ListView):
     template_name="user/bids.html"
     model=Bid
@@ -161,10 +160,8 @@ class place_bid(CreateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get the auction object using the pk from the URL
         auction_id = self.kwargs.get("pk")
         auction = get_object_or_404(Auction, id=auction_id)
-        # Add the auction object to the context
         context['auction'] = auction
         return context
 
@@ -180,13 +177,14 @@ class WonbidsView(ListView):
     
     
 class PaymentView(View):
+    template_name="user/wonbids.html"
     def get(self, request, *args, **kwargs):
         id = self.kwargs.get("pk")
         bid = get_object_or_404(Bid, id=id)
         seller_instance = get_object_or_404(Seller, pk=request.user.id)
         payment_instance = Payment.objects.create(bid=bid, user=seller_instance, payment_mode='Online')
         messages.success(request, "Payment successful")
-        return redirect('auctions-list')
+        return redirect('wonbids')
     
 
 
@@ -212,6 +210,24 @@ def download_bill(request, bid_id):
 
     return response
       
+
+class AddfeedbackView(CreateView):
+    template_name="user/feedback.html"
+    form_class=AddFeedback
+    model=Feedbacks
+    success_url=reverse_lazy("auctions-list")
+ 
+ 
+    def form_valid(self, form):
+        seller_instance = get_object_or_404(Seller, pk=self.request.user.id)
+        form.instance.user = seller_instance
+        messages.success(self.request, "Feedback added successfully")
+        return super().form_valid(form)
+
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Feedback adding failed")
+        return super().form_invalid(form)
 
 
 def logoutuser(request,*args,**kwargs): 

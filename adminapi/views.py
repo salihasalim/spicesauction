@@ -50,13 +50,20 @@ class SignInView(View):
         
         messages.error(request, "Failed to login")
         return render(request, self.template_name)
-    
+
+from django.utils import timezone
+  
 
 @method_decorator(decs,name="dispatch")   
 class HomeView(ListView):
     template_name = "home.html"
     model = Bid
     context_object_name = "bids" 
+    
+    def get_queryset(self):
+        today = timezone.now().date()
+        return Bid.objects.filter(timestamp__date=today)
+
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

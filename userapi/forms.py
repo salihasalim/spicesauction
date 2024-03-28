@@ -1,5 +1,5 @@
 from django import forms
-from  adminapi.models import Seller,Spice,Auction,Bid,Payment
+from  adminapi.models import Seller,Spice,Auction,Bid,Payment,Feedbacks
 from django.contrib.auth.forms import UserCreationForm
 
 
@@ -57,4 +57,16 @@ class AddBid(forms.ModelForm):
         widgets={
             "amount":forms.NumberInput(attrs={"class":"form-control"}),
         }
+        
+class AddFeedback(forms.ModelForm):
+
+    class Meta:
+        model = Feedbacks
+        fields = ["rating", "comment"]
+        widgets = {
+                        
+            'rating': forms.NumberInput(attrs={'class': 'form-control'}),
+            "comment": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
         
