@@ -13,6 +13,11 @@ urlpatterns = [
     path("products/add/",views.ProductsAddView.as_view(),name="products-add"),
     path("products/<int:pk>/remove/",views.remove_product,name="products-remove"),
     path("products/<int:pk>/add/",views.AuctionAddView.as_view(),name="auction-add"),
+    path('place-bid/<int:pk>/', views.place_bid.as_view(), name='place_bid'),
+    path("wonbids/",views.WonbidsView.as_view(),name="wonbids"),
+    path("makepayment/<int:pk>/",views.PaymentView.as_view(),name="payment"),
+    path('download-bill/<int:bid_id>/', views.download_bill, name='download_bill'),
+    
 
 
 

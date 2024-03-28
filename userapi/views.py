@@ -1,11 +1,15 @@
 from django.shortcuts import render,redirect
-from adminapi.models import Seller,Spice,Bid,Auction
+from django.views import View
+from adminapi.models import Seller,Spice,Bid,Auction,Payment
 from django.contrib import messages
 from django.views.generic import CreateView,FormView,ListView,UpdateView,DetailView,TemplateView
 from django.urls import reverse_lazy
 from userapi.forms import RegForm,LoginForm,AddProducts,AddAuction,AddBid
 from django.contrib.auth import authenticate,login,logout
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+import io
 
 
 
@@ -47,7 +51,10 @@ class SignInView(FormView):
 class AuctionsListView(ListView):
     template_name="user/home.html"    
     model=Auction
-    context_object_name="auctions"   
+    context_object_name="auctions" 
+    
+    def get_queryset(self):
+        return Auction.objects.filter(status='Available')  
     
 
 # @method_decorator(decs,name="dispatch")
@@ -120,26 +127,91 @@ class AuctionAddView(CreateView):
         return super().form_invalid(form)
     
     
-class BidAddView(CreateView):
-    template_name="user/addauction.html"
+class place_bid(CreateView):
+    template_name="user/addbid.html"
     form_class=AddBid
     model=Bid
-    success_url=reverse_lazy("products-list")
+    success_url=reverse_lazy("auctions-list")
 
     def form_valid(self, form):
-        seller_instance = get_object_or_404(Seller, pk=self.request.user.id)
-        id=self.kwargs.get("pk")
-        auction=Auction.objects.get(id=id)
-        form.instance.bidder = seller_instance
+        amount = form.cleaned_data.get('amount')
+        auction_id = self.kwargs.get("pk")
+        auction = get_object_or_404(Auction, id=auction_id)
+        bidder_id = self.request.user.id
+        bidder = get_object_or_404(Seller, id=bidder_id)
         form.instance.auction = auction
-        messages.success(self.request, "Bid added successfully")
+        form.instance.bidder = bidder 
+        bid = form.save() 
+        
+        if float(amount) >= float(auction.expected_bid):
+            auction.spice.status = 'Not Available'
+            auction.status = 'Sold'
+            bid.is_selected = True
+            auction.save()
+            bid.save()
+            auction.spice.save()
+        
+        messages.success(self.request, "Bid placed successfully")
         return super().form_valid(form)
 
     
     def form_invalid(self, form):
         messages.error(self.request, "Bid adding failed")
         return super().form_invalid(form)
-          
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get the auction object using the pk from the URL
+        auction_id = self.kwargs.get("pk")
+        auction = get_object_or_404(Auction, id=auction_id)
+        # Add the auction object to the context
+        context['auction'] = auction
+        return context
+
+
+class WonbidsView(ListView):
+    template_name="user/wonbids.html"
+    model=Bid
+    context_object_name="bids"
+    
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Bid.objects.filter(bidder=user_id, is_selected=True)
+    
+    
+class PaymentView(View):
+    def get(self, request, *args, **kwargs):
+        id = self.kwargs.get("pk")
+        bid = get_object_or_404(Bid, id=id)
+        seller_instance = get_object_or_404(Seller, pk=request.user.id)
+        payment_instance = Payment.objects.create(bid=bid, user=seller_instance, payment_mode='Online')
+        messages.success(request, "Payment successful")
+        return redirect('auctions-list')
+    
+
+
+def download_bill(request, bid_id):
+    bid = Bid.objects.get(id=bid_id)
+    spice_name = bid.auction.spice.name
+    amount = bid.amount
+    user_name = bid.bidder.seller.name
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 750, "Spice Auction Bill")
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 720, f"Thank you for purchasing {spice_name} from our site.")
+    p.drawString(100, 700, f"Amount: Rs. {amount}")
+    p.drawString(100, 680, f"User: {user_name}")
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="spice_auction_bill.pdf"'
+
+    return response
+      
 
 
 def logoutuser(request,*args,**kwargs): 

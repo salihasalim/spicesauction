@@ -100,6 +100,7 @@ body{
     height: 420px;
     overflow: hidden;
     z-index: 2;
+    margin-top: -100px;
 }
 .login-container{
     position: absolute;
@@ -325,15 +326,15 @@ header{
             <form action="{% url 'signin' %}" method="post">
                 {% csrf_token %}
             <div class="input-box">
-                <input type="text" class="input-field" placeholder="Username" name="username">
+                <input type="text" class="input-field" placeholder="Username" name="username" required>
                 <i class="bx bx-user"></i>
             </div>
             <div class="input-box">
-                <input type="password" class="input-field" placeholder="Password" name="password">
+                <input type="password" class="input-field" placeholder="Password" name="password" required>
                 <i class="bx bx-lock-alt"></i>
             </div>
             <div class="input-box">
-                <input type="submit" class="submit"value="Sign In">
+                <input type="submit" class="submit" value="Sign In" id="signin-button">
             </div>
             </form>
             <div class="two-col">
@@ -345,6 +346,21 @@ header{
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('signin-form');
+        var button = document.getElementById('signin-button');
+        form.querySelectorAll('input').forEach(function (input) {
+            input.addEventListener('input', function () {
+                var anyEmpty = Array.from(form.querySelectorAll('input')).some(function (input) {
+                    return !input.value.trim();
+                });
+                button.disabled = anyEmpty;
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

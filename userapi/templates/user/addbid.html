@@ -1,0 +1,44 @@
+{%extends 'user/base.html'%}
+{%load static%}
+{%block body_block%}
+
+<style>
+    body {
+        background-color: #f2f2f2; /* Set the background color to grey */
+    }
+    .form-box {
+        display: block;
+        width: 510px;
+        height: auto;
+        background: #fff;
+        margin: 0 auto;
+        padding: 10px 17px;
+        -webkit-box-shadow: 2px 2px 3px -1px rgba(0,0,0,0.35);
+        margin: 0 auto;
+        font-size: 15px;
+        border-radius: 7px;
+    }  
+</style>
+
+<div class="p-5 form-box border border-dark text-dark" style="margin-top:170px;">
+    <h3>Auction Details:</h3>
+    <ul>
+        <img src="{{ auction.spice.image.url }}" alt="" style="border-radius: 10px;margin-bottom:30px;">
+        <p><strong>Name:</strong> {{ auction.spice.name }}</p>
+        <p><strong>Auctioneer:</strong> {{ auction.auctioneer }}</p>
+        <p><strong>Description:</strong> {{ auction.spice.description }}</p>
+        <p><strong>Starting Bid:</strong> Rs. {{ auction.starting_bid }}</p>
+        <p><strong>Expecting Bid:</strong> Rs .{{ auction.expected_bid }}</p>
+        <p><strong>Stock Quantity:</strong> {{ auction.spice.stock_quantity }} kg</p>
+        <p><strong>Auction Ends at </strong> {{ auction.end_time }}</p>
+    </ul>
+    
+    <hr>
+    <form action="" method="post" enctype="multipart/form-data">
+        {%csrf_token%}
+        {{form.as_p}}
+        <input type="submit" value="add" class="form-control btn btn-outline-dark">
+    </form>
+</div>
+
+{%endblock%}

@@ -1,5 +1,5 @@
 from django import forms
-from  adminapi.models import Seller,Spice,Auction,Bid
+from  adminapi.models import Seller,Spice,Auction,Bid,Payment
 from django.contrib.auth.forms import UserCreationForm
 
 
@@ -57,3 +57,4 @@ class AddBid(forms.ModelForm):
         widgets={
             "amount":forms.NumberInput(attrs={"class":"form-control"}),
         }
+        
