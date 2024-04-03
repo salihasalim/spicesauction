@@ -69,7 +69,7 @@ h1 {
 /** page structure **/
 #wrapper {
   display: block;
-  width: 850px;
+  width: 950px;
   background: #fff;
   margin: 0 auto;
   padding: 10px 17px;
@@ -132,6 +132,8 @@ h1 {
            <th><span>Amount</span></th>
            <th><span>Timestamp</span></th>
            <th><span>is_selected</span></th>
+           <th><span>slip</span></th>
+           
          </tr>
        </thead>
        <tbody>
@@ -144,8 +146,12 @@ h1 {
            <td>{{bid.bidder.seller.name}}</td>
            <td>Rs. {{bid.amount}}</td>          
            <td>{{bid.timestamp}}</td>   
-           <td>{{bid.is_selected}}</td>  
-
+           <td>{{bid.is_selected}}</td> 
+           <td>
+              {% if bid.payment_set.exists %}
+                <a href="{%url 'download_slip' bid.id%}" class="btn btn-outline-info me-3">payment slip</a>
+              {% endif %}
+           </td>
         </tr>
          {%endfor%}
        

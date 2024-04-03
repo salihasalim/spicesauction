@@ -5,6 +5,8 @@ from django.contrib.auth import authenticate, login,logout
 from django.utils.decorators import method_decorator
 from django.db.models import Count
 from datetime import date
+from django.db.models import Sum
+
 
 
 from adminapi.models import Spice,Seller,Bid,Feedbacks,Auction,Payment
@@ -68,6 +70,8 @@ class HomeView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['bids_count'] = Bid.objects.aggregate(count=Count('id'))['count']
+        total_amount = Payment.objects.aggregate(total_amount=Sum('bid__amount'))['total_amount'] or 0
+        context['total_money']=total_amount
         today = date.today()
         context['todays_bids_count'] = Bid.objects.filter(timestamp__date=today).count()
         context['users_count'] = Seller.objects.all().count()

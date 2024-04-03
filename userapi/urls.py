@@ -17,6 +17,7 @@ urlpatterns = [
     path("wonbids/",views.WonbidsView.as_view(),name="wonbids"),
     path("makepayment/<int:pk>/",views.PaymentView.as_view(),name="payment"),
     path('download-bill/<int:bid_id>/', views.download_bill, name='download_bill'),
+    path('download-slip/<int:bid_id>/', views.download_slip, name='download_slip'),
     path("feedback/",views.AddfeedbackView.as_view(),name="feedback-add"),
     
 

@@ -8,8 +8,20 @@ from userapi.forms import RegForm,LoginForm,AddProducts,AddAuction,AddBid,AddFee
 from django.contrib.auth import authenticate,login,logout
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
 from reportlab.pdfgen import canvas
 import io
+
+
+
+def signin_required(fn):    
+    def wrapper(request,*args,**kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request,"invalid session!..please login")
+            return redirect("signin")
+        else:
+            return fn(request,*args,**kwargs)
+    return wrapper
 
 
 
@@ -47,7 +59,6 @@ class SignInView(FormView):
             
             
                
-# @method_decorator(decs,name="dispatch")
 class AuctionsListView(ListView):
     template_name="user/home.html"    
     model=Auction
@@ -68,7 +79,7 @@ class BidsListView(ListView):
         return Bid.objects.filter(auction__auctioneer_id=user_id)
 
     
-    
+
 class ProductsListView(ListView):
     template_name="user/products.html"
     form_class=AddProducts
@@ -80,7 +91,7 @@ class ProductsListView(ListView):
         print(user_id)
         return Spice.objects.filter(seller=user_id)
     
-        
+
 class ProductsAddView(CreateView):
     template_name="user/addproducts.html"
     form_class=AddProducts
@@ -98,7 +109,7 @@ class ProductsAddView(CreateView):
         messages.error(self.request, "Product adding failed")
         return super().form_invalid(form)
     
-    
+
 def remove_product(request,*args,**kwargs):
     id=kwargs.get("pk")
     Spice.objects.filter(id=id).delete()
@@ -125,7 +136,7 @@ class AuctionAddView(CreateView):
         messages.error(self.request, "Auction adding failed")
         return super().form_invalid(form)
     
-    
+
 class place_bid(CreateView):
     template_name="user/addbid.html"
     form_class=AddBid
@@ -175,7 +186,7 @@ class WonbidsView(ListView):
         user_id = self.request.user.id
         return Bid.objects.filter(bidder=user_id, is_selected=True)
     
-    
+
 class PaymentView(View):
     template_name="user/wonbids.html"
     def get(self, request, *args, **kwargs):
@@ -200,6 +211,28 @@ def download_bill(request, bid_id):
     p.drawString(100, 750, "Spice Auction Bill")
     p.setFont("Helvetica", 12)
     p.drawString(100, 720, f"Thank you for purchasing {spice_name} from our site.")
+    p.drawString(100, 700, f"Amount: Rs. {amount}")
+    p.drawString(100, 680, f"User: {user_name}")
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="spice_auction_bill.pdf"'
+
+    return response
+
+def download_slip(request, bid_id):
+    bid = Bid.objects.get(id=bid_id)
+    spice_name = bid.auction.spice.name
+    amount = bid.amount
+    user_name = bid.bidder.seller.name
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 750, "Spice Auction Bill.. payment slip")
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 720, f"{spice_name}.")
     p.drawString(100, 700, f"Amount: Rs. {amount}")
     p.drawString(100, 680, f"User: {user_name}")
     p.showPage()
