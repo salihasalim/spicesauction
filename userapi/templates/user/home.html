@@ -6,6 +6,9 @@
 
 
         <!-- Hero Start -->
+
+        <div class="container">
+        </div>
         <div class="container-fluid py-5 mb-5 hero-headers" style="background-color: rgba(15, 14, 14, 0.232);">
             <div class="container py-5 ">
                 <div class="row g-5 align-items-center">
@@ -48,7 +51,11 @@
         </div>
         <!-- Hero End -->
 
-
+        <div class="container">
+            <article>
+                <marquee behavior="scroll" direction="left">Todays highest bid is done by {{ highestbid.bidder.name }} on spice {{ highestbid.auction.spice.name }} on {{ highestbid.timestamp }} and the amount is {{ highestbid.amount }}..... || </marquee>
+            </article>
+        </div>
        
         <div class="container-fluid fruite py-5">
             <div class="container py-5">
@@ -94,7 +101,96 @@
                     
                 </div>      
             </div>
-        </div>      
+        </div>   
+        
+        
+        <style>
+            article {
+                max-width: auto;
+                margin: 1em auto;
+                overflow: hidden;
+                position: relative;
+                min-height: 2em;
+              }
+              
+              .example-left {
+                white-space: nowrap;
+                position: absolute;
+                text-transform: uppercase;
+              }
+              
+              .example-left {
+                -webkit-animation: mymove 8s linear infinite; /* Safari 4.0 - 8.0 */
+                white-space: nowrap;
+                animation: mymove 8s linear infinite alternate;
+              }
+              
+              /* Safari 4.0 - 8.0 */
+              @-webkit-keyframes mymove {
+                from {
+                  left: 0;
+                }
+                to {
+                  left: -140px;
+                }
+              }
+              
+              @keyframes mymove {
+                from {
+                  left: 0;
+                }
+                to {
+                  left: -140px;
+                }
+              }
+              
+              
+              .example-right {
+                white-space: nowrap;
+                position: absolute;
+                top:2em;
+                opacity: .4;
+                text-transform: uppercase;
+              }
+              
+              .example-right {
+                -webkit-animation: urmove 8s linear infinite; /* Safari 4.0 - 8.0 */
+                white-space: nowrap;
+                animation: urmove 8s linear infinite alternate;
+              }
+              
+              /* Safari 4.0 - 8.0 */
+              @-webkit-keyframes urmove {
+                from {
+                  right: 0;
+                }
+                to {
+                  right: -140px;
+                }
+              }
+              
+              @keyframes urmove {
+                from {
+                  right: 0;
+                }
+                to {
+                  right: -140px;
+                }
+              }
+              
+              
+              @keyframes early 
+              { from { opacity:1; } to { opacity:0; } }
+              
+              .early {
+                  animation:fadeIn ease-in 1; /* call our keyframe named fadeIn, use animation ease-in and repeat it only 1 time */
+              
+                  animation-fill-mode:forwards;  /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
+              
+                  animation-duration:1s;
+                  animation-delay: 1.5s
+              }
+        </style>
 
 
 

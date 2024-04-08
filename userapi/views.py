@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from reportlab.pdfgen import canvas
 import io
+from django.utils import timezone
 
 
 
@@ -57,7 +58,7 @@ class SignInView(FormView):
                 messages.error(request,"failed to login")
                 return render(request,self.template_name,{"form":form})
             
-            
+from django.db.models import Sum           
                
 class AuctionsListView(ListView):
     template_name="user/home.html"    
@@ -66,6 +67,18 @@ class AuctionsListView(ListView):
     
     def get_queryset(self):
         return Auction.objects.filter(status='Available')  
+    
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        highest_bid = Bid.objects.order_by('-amount').first()
+
+        context['highestbid'] = highest_bid
+        return context
+
+        
+    
     
 
 class BidsListView(ListView):
@@ -137,6 +150,8 @@ class AuctionAddView(CreateView):
         return super().form_invalid(form)
     
 
+from django.db.models import Max
+
 class place_bid(CreateView):
     template_name="user/addbid.html"
     form_class=AddBid
@@ -174,6 +189,12 @@ class place_bid(CreateView):
         auction_id = self.kwargs.get("pk")
         auction = get_object_or_404(Auction, id=auction_id)
         context['auction'] = auction
+        high_bid = Bid.objects.filter(auction=auction).order_by('-amount').first()
+        if high_bid:
+            context['highbid'] = high_bid.amount
+        else:
+            context['highbid'] = None
+    
         return context
 
 
@@ -204,6 +225,10 @@ def download_bill(request, bid_id):
     spice_name = bid.auction.spice.name
     amount = bid.amount
     user_name = bid.bidder.seller.name
+    date=timezone.now()
+    quantity=bid.auction.spice.stock_quantity
+    auction=bid.auction.auctioneer
+    
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer)
@@ -211,8 +236,11 @@ def download_bill(request, bid_id):
     p.drawString(100, 750, "Spice Auction Bill")
     p.setFont("Helvetica", 12)
     p.drawString(100, 720, f"Thank you for purchasing {spice_name} from our site.")
-    p.drawString(100, 700, f"Amount: Rs. {amount}")
+    p.drawString(100, 700, f"Auctioneer : {auction}")
     p.drawString(100, 680, f"User: {user_name}")
+    p.drawString(100, 660, f"Date: {date}")
+    p.drawString(100, 640, f"Quantity: {quantity}")
+    p.drawString(100, 620, f"Total Price: Rs. {amount}")
     p.showPage()
     p.save()
     buffer.seek(0)
