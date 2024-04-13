@@ -204,47 +204,80 @@ h1 {
            <td>{{bid.timestamp}}</td>   
            <td>{{bid.is_selected}}</td>  
            <td>
-              <a href="{%url 'payment' bid.id%}" class=" btn btn-outline-primary me-4" onclick="showPopup(10000000)">Make payment</a>
+              <button class="btn btn-success ms-3 razorpay-button me-3" data-amount="{{bid.amount}}" data-bid-id="{{ bid.id }}">Pay</button>
               {% if bid.payment_set.exists %}
-              <a href="{% url 'download_bill' bid.id %}" class="btn btn-outline-info me-3">Download bill</a>
+              <a href="{% url 'download_bill' bid.id %}" class="btn btn-outline-info me-3 ps-4">Download bill</a>
               {% endif %}
   
            </td>
 
         </tr>
          {%endfor%}
-
-         <div id="paymentSuccessPopup" class="popup">
-          <div class="popup-content">
-              <span class="close" onclick="closePopup()">&times;</span>
-              <div class="success-message">
-                  Payment Successful <i class="fa fa-check-circle"></i>
-              </div>
-          </div>
-         </div>
        
        </tbody>
      </table>
     </div> 
+    
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script>
-        $(function(){
-  $('#keywords').tablesorter(); 
-});
-
-
-function showPopup(delay) {
-  var popup = document.getElementById('paymentSuccessPopup');
-  popup.style.display = 'block';
-  // You can add animation effects here
-}
-
-// Function to close the popup
-function closePopup() {
-  var popup = document.getElementById('paymentSuccessPopup');
-  popup.style.display = 'none';
-}
-
-
+        document.querySelectorAll('.razorpay-button').forEach(button => {
+            button.addEventListener('click', function() {
+                var amount = parseInt(this.getAttribute('data-amount'));
+                var bidId = this.getAttribute('data-bid-id'); // Get bid_id directly from the button
+                var userEmail = "{{ request.user.email_address }}";
+                var userPhone = "{{ request.user.phone }}";
+                console.log("front Bid ID:", bidId)
+                console.log("front amount:", amount)
+    
+                var options = {
+                    key: 'rzp_test_RkFyMGIZ9LCFmH', 
+                    amount: amount * 100, 
+                    currency: 'INR',
+                    name: 'Spices Auction',
+                    description: 'Payment for Spice',
+                    prefill: {
+                        name: '{{ request.user.username }}',
+                        email: userEmail,
+                        contact: userPhone
+                    },
+                    theme: {
+                        color: '#3399cc'
+                    },
+                    handler: function(response) {
+                        alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+    
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("POST", "{% url 'payment' %}", true);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === 4 && xhr.status === 200) {
+                                // Handle the response from the server
+                                var responseData = JSON.parse(xhr.responseText);
+                                if (responseData.success) {
+                                    alert('Payment record created successfully.');
+                                } else {
+                                    alert('Failed to create payment record.');
+                                }
+                            }
+                        };
+                    
+                        var data = JSON.stringify({
+                            buyer_id: "{{ request.user.id }}",
+                            bid_id: bidId,
+                            amount: amount
+                        });
+                        console.log("Data to be sent:", data);
+                        xhr.send(data);
+                    }
+                };
+    
+                var razorpayInstance = new Razorpay(options);
+                razorpayInstance.open();
+            });
+        });
     </script>
 
     

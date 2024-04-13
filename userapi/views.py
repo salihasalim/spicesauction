@@ -208,15 +208,31 @@ class WonbidsView(ListView):
         return Bid.objects.filter(bidder=user_id, is_selected=True)
     
 
-class PaymentView(View):
-    template_name="user/wonbids.html"
-    def get(self, request, *args, **kwargs):
-        id = self.kwargs.get("pk")
-        bid = get_object_or_404(Bid, id=id)
-        seller_instance = get_object_or_404(Seller, pk=request.user.id)
-        payment_instance = Payment.objects.create(bid=bid, user=seller_instance, payment_mode='Online')
-        messages.success(request, "Payment successful")
-        return redirect('wonbids')
+import json
+from django.http import JsonResponse
+
+def create_payment(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        buyer_id = data.get('buyer_id')
+        bid_id = data.get('bid_id')
+
+        print("Data received from front end:", data)
+
+        try:
+            payment = Payment.objects.create(
+                user_id=buyer_id,
+                bid_id=bid_id,
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+
     
 
 
