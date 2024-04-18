@@ -239,10 +239,11 @@ def create_payment(request):
 def download_bill(request, bid_id):
     bid = Bid.objects.get(id=bid_id)
     spice_name = bid.auction.spice.name
-    amount = bid.amount
+    unitprice = bid.amount
     user_name = bid.bidder.seller.name
     date=timezone.now()
     quantity=bid.auction.spice.stock_quantity
+    amount=unitprice*quantity
     auction=bid.auction.auctioneer
     
 
@@ -256,7 +257,9 @@ def download_bill(request, bid_id):
     p.drawString(100, 680, f"User: {user_name}")
     p.drawString(100, 660, f"Date: {date}")
     p.drawString(100, 640, f"Quantity: {quantity}")
-    p.drawString(100, 620, f"Total Price: Rs. {amount}")
+    p.drawString(100, 620, f"Unit Price: {unitprice}")
+    p.drawString(100, 580, f"___________________________________")
+    p.drawString(100, 550, f"Total Price: Rs. {amount}")
     p.showPage()
     p.save()
     buffer.seek(0)

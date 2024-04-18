@@ -54,8 +54,19 @@ class Auction(models.Model):
     choices= [ 
         ('Available', 'Available'),
         ('Sold', 'Sold'),
+        ('Expired', 'Expired'),
     ]
     status=models.CharField(max_length=50, choices=choices, default='Available')
+    
+
+
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+
+@receiver(pre_save, sender=Auction)
+def update_auction_status(sender, instance, **kwargs):
+    if instance.end_time < timezone.now():
+        instance.status = 'Expired'
 
 
 class Bid(models.Model):
