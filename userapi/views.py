@@ -16,6 +16,8 @@ from django.utils import timezone
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+from django.core.mail import send_mail
+
 
 
 def signin_required(fn):    
@@ -85,7 +87,23 @@ class AuctionsListView(ListView):
             if highest_bid:
                 highest_bid.is_selected = True
                 highest_bid.save()
-                user=highest_bid.bidder.id
+                user=highest_bid.bidder.email_address
+                print(user)
+                
+                
+                subject = "Spices Auction!"
+                message = (
+                    f"Dear Customer,\n\n"
+                    "You have won the Bid! "
+                    "We're thrilled to announce you as the winner.\n\n"
+                    "Feel free to explore our website and discover a world of exciting products and services tailored just for you.\n\n"
+                    "If you have any questions or need assistance, don't hesitate to reach out to us.\n\n"
+                    "Best regards,\n"
+                    "Spices Auction Board"
+                )
+                email_from = "pharmeasy305@gmail.com"
+                email_to = user
+                send_mail(subject, message, email_from, [email_to])
                 
 
     def get_context_data(self, **kwargs):
