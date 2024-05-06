@@ -12,6 +12,9 @@ from django.utils.decorators import method_decorator
 from reportlab.pdfgen import canvas
 import io
 from django.utils import timezone
+from django.utils import timezone
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
 
@@ -61,24 +64,42 @@ class SignInView(FormView):
 from django.db.models import Sum           
                
 class AuctionsListView(ListView):
-    template_name="user/home.html"    
-    model=Auction
-    context_object_name="auctions" 
-    
+    template_name = "user/home.html"
+    model = Auction
+    context_object_name = "auctions"
+
     def get_queryset(self):
-        return Auction.objects.filter(status='Available')  
-    
-    
+        return Auction.objects.filter(status='Available')
+
+    def update_expired_auctions(self):
+        expired_auctions = Auction.objects.filter(end_time__lte=timezone.now(), status='Available')
+
+        for auction in expired_auctions:
+            auction.status = 'Sold'
+            auction.save()  
+            auction.spice.status = 'Not Available'
+            auction.spice.save()
+            print("updation happens")
+
+            highest_bid = auction.bid_set.order_by('-amount').first()
+            if highest_bid:
+                highest_bid.is_selected = True
+                highest_bid.save()
+                user=highest_bid.bidder.id
+                
+
     def get_context_data(self, **kwargs):
+        self.update_expired_auctions()  
         context = super().get_context_data(**kwargs)
 
         highest_bid = Bid.objects.order_by('-amount').first()
-
         context['highestbid'] = highest_bid
-        return context
 
-        
-    
+        today = timezone.now()
+        context["time"]=today
+        print("todays time from auction", today)
+
+        return context
     
 
 class BidsListView(ListView):
@@ -88,7 +109,6 @@ class BidsListView(ListView):
 
     def get_queryset(self):
         user_id = self.request.user.id
-        print(user_id)
         return Bid.objects.filter(auction__auctioneer_id=user_id)
 
     
@@ -101,7 +121,6 @@ class ProductsListView(ListView):
     
     def get_queryset(self):
         user_id = self.request.user.id
-        print(user_id)
         return Spice.objects.filter(seller=user_id)
     
 
@@ -152,6 +171,7 @@ class AuctionAddView(CreateView):
 
 from django.db.models import Max
 
+
 class place_bid(CreateView):
     template_name="user/addbid.html"
     form_class=AddBid
@@ -162,19 +182,12 @@ class place_bid(CreateView):
         amount = form.cleaned_data.get('amount')
         auction_id = self.kwargs.get("pk")
         auction = get_object_or_404(Auction, id=auction_id)
+        end_time=auction.end_time
         bidder_id = self.request.user.id
         bidder = get_object_or_404(Seller, id=bidder_id)
         form.instance.auction = auction
         form.instance.bidder = bidder 
         bid = form.save() 
-        
-        if float(amount) >= float(auction.expected_bid):
-            auction.spice.status = 'Not Available'
-            auction.status = 'Sold'
-            bid.is_selected = True
-            auction.save()
-            bid.save()
-            auction.spice.save()
         
         messages.success(self.request, "Bid placed successfully")
         return super().form_valid(form)
@@ -196,6 +209,18 @@ class place_bid(CreateView):
             context['highbid'] = None
     
         return context
+    
+
+# @receiver(pre_save, sender=place_bid)
+# def check_auction_status(sender, instance, **kwargs):
+#     if instance.end_time >= timezone.now():
+#         highest_bid = instance.bid_set.order_by('-amount').first()
+#         if highest_bid:
+#             highest_bid.is_selected = True
+#             highest_bid.save()
+#         instance.status = 'Sold'
+#         instance.spice.status = 'Not Available'
+#         instance.save()
 
 
 class WonbidsView(ListView):
@@ -271,7 +296,10 @@ def download_bill(request, bid_id):
 def download_slip(request, bid_id):
     bid = Bid.objects.get(id=bid_id)
     spice_name = bid.auction.spice.name
-    amount = bid.amount
+    unitprice = bid.amount
+    date=timezone.now()
+    quantity=bid.auction.spice.stock_quantity
+    amount=unitprice*quantity
     user_name = bid.bidder.seller.name
 
     buffer = io.BytesIO()
@@ -279,9 +307,12 @@ def download_slip(request, bid_id):
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "Spice Auction Bill.. payment slip")
     p.setFont("Helvetica", 12)
-    p.drawString(100, 720, f"{spice_name}.")
-    p.drawString(100, 700, f"Amount: Rs. {amount}")
-    p.drawString(100, 680, f"User: {user_name}")
+    p.drawString(100, 720, f"Spice: {spice_name}")
+    p.drawString(100, 700, f"Unit Price: Rs. {unitprice}")
+    p.drawString(100, 680, f"Quantity: {quantity} kg")
+    p.drawString(100, 660, f"User: {user_name}")
+    p.drawString(100, 640, f"Total amount: Rs. {amount}")
+    p.drawString(100, 600, f"Payment Date: {date}")
     p.showPage()
     p.save()
     buffer.seek(0)

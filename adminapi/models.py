@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 class CustomUser(AbstractUser):
     user_type_choices = [ 
         ('Admin', 'Admin'),
@@ -59,16 +62,6 @@ class Auction(models.Model):
     status=models.CharField(max_length=50, choices=choices, default='Available')
     
 
-
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-
-@receiver(pre_save, sender=Auction)
-def update_auction_status(sender, instance, **kwargs):
-    if instance.end_time < timezone.now():
-        instance.status = 'Expired'
-
-
 class Bid(models.Model):
     auction = models.ForeignKey(Auction, on_delete=models.CASCADE)
     bidder = models.ForeignKey(Seller, on_delete=models.CASCADE)
@@ -96,3 +89,38 @@ class Feedbacks(models.Model):
     def __str__(self):
         return f"feedback {self.comment} by {self.user}"
 
+
+
+#signals portion
+
+
+
+# @receiver(post_save, sender=Auction)
+# def update_auction_status(sender, instance, created, **kwargs):
+#     if not created:  # Only perform actions on existing instances
+#         return  # Exit if this is not a new instance
+
+#     # Convert end_time to a timezone-aware datetime object if it's not already
+#     if not instance.end_time.tzinfo:
+#         instance.end_time = timezone.make_aware(instance.end_time)
+
+#     # Ensure that timezone.now() is also in the same timezone as end_time
+#     current_time = timezone.localtime(timezone.now(), timezone=instance.end_time.tzinfo)
+
+#     if instance.end_time <= current_time:
+#         instance.status = 'Sold'
+#         instance.save()  # Save the updated status
+#         print("Auction status is", instance.status)
+
+#         # Update related objects
+#         instance.spice.status = 'Not Available'
+#         instance.spice.save()
+#         print("signal works at",current_time)
+
+#         highest_bid = instance.bid_set.order_by('-amount').first()
+#         if highest_bid:
+#             highest_bid.is_selected = True
+#             highest_bid.save()
+            
+        
+        
