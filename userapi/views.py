@@ -101,7 +101,7 @@ class AuctionsListView(ListView):
                     "Best regards,\n"
                     "Spices Auction Board"
                 )
-                email_from = "pharmeasy305@gmail.com"
+                email_from = "spicesauction11@gmail.com"
                 email_to = user
                 send_mail(subject, message, email_from, [email_to])
                 
