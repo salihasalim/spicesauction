@@ -172,14 +172,18 @@ class AuctionAddView(CreateView):
     model=Auction
     success_url=reverse_lazy("products-list")
 
+  # In AuctionAddView
     def form_valid(self, form):
         seller_instance = get_object_or_404(Seller, pk=self.request.user.id)
         id=self.kwargs.get("pk")
         spice=Spice.objects.get(id=id)
         form.instance.auctioneer = seller_instance
         form.instance.spice = spice
+        form.instance.status = 'Available'  # Explicitly set status to Available
         messages.success(self.request, "Auction added successfully")
-        return super().form_valid(form)
+        auction = super().form_valid(form)
+        print(f"New auction created: {form.instance}, Status: {form.instance.status}")
+        return auction
 
     
     def form_invalid(self, form):
@@ -189,7 +193,6 @@ class AuctionAddView(CreateView):
 
 from django.db.models import Max
 
-
 class place_bid(CreateView):
     template_name="user/addbid.html"
     form_class=AddBid
@@ -197,11 +200,16 @@ class place_bid(CreateView):
     success_url=reverse_lazy("auctions-list")
 
     def form_valid(self, form):
-        amount = form.cleaned_data.get('amount')
         auction_id = self.kwargs.get("pk")
         auction = get_object_or_404(Auction, id=auction_id)
-        end_time=auction.end_time
         bidder_id = self.request.user.id
+        
+        # Check if the bidder is the owner of the product
+        if auction.auctioneer.id == bidder_id:
+            messages.error(self.request, "You cannot bid on your own product")
+            return redirect("auctions-list")
+        
+        amount = form.cleaned_data.get('amount')
         bidder = get_object_or_404(Seller, id=bidder_id)
         form.instance.auction = auction
         form.instance.bidder = bidder 
@@ -210,7 +218,6 @@ class place_bid(CreateView):
         messages.success(self.request, "Bid placed successfully")
         return super().form_valid(form)
 
-    
     def form_invalid(self, form):
         messages.error(self.request, "Bid adding failed")
         return super().form_invalid(form)
