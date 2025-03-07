@@ -4,7 +4,6 @@ from adminapi import views
 
 
 urlpatterns=[
-    
     path("login/",views.SignInView.as_view(),name="adminsignin"),
     path("logout/",views.signoutview,name="adminsignout"),
     path("home/",views.HomeView.as_view(),name="home"),

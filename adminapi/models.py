@@ -10,6 +10,8 @@ class CustomUser(AbstractUser):
     user_type_choices = [ 
         ('Admin', 'Admin'),
         ('Seller', 'Seller'),
+        ('Farmer','Farmer'),
+        ('Foreign_buyer','Foreign_buyer')
     ]
     user_type = models.CharField(max_length=50, choices=user_type_choices, default='Admin') 
 

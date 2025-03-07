@@ -159,17 +159,17 @@
           <div class="space-y-3 border bg-white px-2 py-4 sm:px-6 shadow rounded">
             {%for bi in items%}
             <div class="flex flex-col rounded-lg bg-white sm:flex-row">
-              {%if bi.spice_object.picture%}
-              <img class="m-2 h-24 w-28 border object-cover object-center" src="{{bi.spice_object.picture.url}}" alt="" />
+              {%if bi.product_object.picture%}
+              <img class="m-2 h-24 w-28 border object-cover object-center" src="{{bi.product_object.picture.url}}" alt="" />
               {%else%}
               <img class="m-2 h-24 w-28 border object-cover object-center" src="" alt="" />
               {%endif%}
               
               <div class="flex w-full flex-col px-4 py-4">
-                <span class="font-semibold">{{bi.spice_object.title}}</span>
-                <!-- <span class="float-right text-gray-400">{{bi.spice_object}}</span> -->
+                <span class="font-semibold">{{bi.product_object.title}}</span>
+                <span class="float-right text-gray-400">{{bi.size_object}}</span>
                 <span class="float-right text-gray-400">Qty:{{bi.quantity}}</span>
-                <p class="text-lg font-bold">₹{{bi.spice_object.price}}</p>
+                <p class="text-lg font-bold">₹{{bi.product_object.price}}</p>
               </div>
             </div>
             {%endfor%}

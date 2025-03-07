@@ -32,6 +32,9 @@ AUTH_USER_MODEL="adminapi.CustomUser"
 
 
 
+STRIPE_PUBLIC_KEY = "your_public_key"
+STRIPE_SECRET_KEY = "your_secret_key"
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -140,3 +143,8 @@ EMAIL_USE_TLS = True  # TLS - Transport Layer Security
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'spicesauction11@gmail.com'
 EMAIL_HOST_PASSWORD = 'varmqoyeipvotdre'
+
+
+
+RZP_KEY_ID = "rzp_test_1bsos7mtrvFh3G"
+RZP_KEY_SECRET = "e0caKFDxuZNumeK6G2Ir4G1z"

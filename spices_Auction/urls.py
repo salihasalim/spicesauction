@@ -19,8 +19,10 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from store.views import test_view
+from adminapi import views
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("",views.render_page,name='startpage'),
     path('adminapi/',include("adminapi.urls")),
     path('user/',include("userapi.urls")),
     path('store/', include('store.urls')),

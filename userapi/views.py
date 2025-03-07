@@ -58,7 +58,15 @@ class SignInView(FormView):
             if usr:
                 login(request,usr)
                 messages.success(request,"login success")
-                return redirect("auctions-list")
+
+                if usr.user_type == 'Admin':
+                    return redirect('admin-login') 
+
+                elif usr.user_type in ['Farmer', 'Seller']:
+
+                    return redirect("auctions-list")
+                elif usr.user_type == 'Foreign_buyer':
+                    return redirect('products-list')
             else:
                 messages.error(request,"failed to login")
                 return render(request,self.template_name,{"form":form})

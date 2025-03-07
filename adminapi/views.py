@@ -12,6 +12,11 @@ from django.db.models import Sum
 from adminapi.models import Spice,Seller,Bid,Feedbacks,Auction,Payment
 
 
+def render_page(request):
+    return render(request, 'startpage.html')
+
+
+
 def signin_required(fn):    
     def wrapper(request,*args,**kwargs):
         if not request.user.is_authenticated:

@@ -5,7 +5,7 @@ from store.models import Order,OrderItem,Category,Spice,Origin,ProcessingType,Qu
 admin.site.register(Order)
 admin.site.register(OrderItem)
 admin.site.register(Category)
-admin.site.register(    Spice)
+admin.site.register(Spice)
 admin.site.register(Origin)
 admin.site.register(ProcessingType)
 admin.site.register(Quality)

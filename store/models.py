@@ -63,20 +63,23 @@ def create_basket(sender,instance,created,**kwargs):
 post_save.connect(create_basket,CustomUser)
    
 class Order(BaseModel):
-    customer=models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name="orders")
-    address=models.TextField()
-    phone=models.CharField(max_length=20)
-    PAYMENT_OPTIONS=(
-        ("COD","COD"),
-        ("ONLINE","ONLINE")
+    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
+    address = models.TextField(null=True)
+    phone = models.CharField(null=True,max_length=20)
+    PAYMENT_OPTIONS = (
+        ("COD", "COD"),
+        ("ONLINE", "ONLINE")
     )
-    payment_method=models.CharField(max_length=15,choices=PAYMENT_OPTIONS,default="COD")
-    rzp_order_id=models.CharField(max_length=100,null=True)
-    is_paid=models.BooleanField(default=False)
-   
+    payment_method = models.CharField(max_length=15, choices=PAYMENT_OPTIONS, default="COD")
+    rzp_order_id = models.CharField(max_length=100, null=True, blank=True)
+    payment_id = models.CharField(max_length=100, null=True, blank=True)  # Add this field
+    signature_id = models.CharField(max_length=100, null=True, blank=True)  # Add this field
+    is_paid = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, default='pending')  # Add this field
+    
     @property
     def order_total(self):
-        total=sum([oi.item_total for oi in self.orderitems.all()])
+        total = sum([oi.item_total for oi in self.orderitems.all()])
         return total
 
 class OrderItem(BaseModel):
@@ -92,3 +95,14 @@ class OrderItem(BaseModel):
     @property
     def item_total(self):
         return self.price*self.quantity
+    
+    def save(self, *args, **kwargs):
+        # Reduce stock quantity when order item is created
+        if not self.id:  # Only on creation
+            spice = self.spice_object
+            if spice.stock_quantity >= self.quantity:
+                spice.stock_quantity -= self.quantity
+                spice.save()
+            else:
+                raise ValueError("Not enough stock available")
+        super().save(*args,**kwargs)

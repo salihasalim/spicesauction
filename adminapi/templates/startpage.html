@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+    {%load static%}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spice Ordering Website</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://source.unsplash.com/1600x900/?spices,food') center/cover;
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        .btn-explore {
+            background: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-explore:hover {
+            background: #e68900;
+            transform: scale(1.05);
+        }
+
+        /* Spice Products Section */
+        .spice-section {
+            padding: 50px 20px;
+        }
+        .spice-card {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .spice-card:hover {
+            transform: scale(1.05);
+        }
+        .spice-card img {
+            height: 200px;
+            object-fit: cover;
+        }
+        .spice-card .card-body {
+            text-align: center;
+        }
+        .btn-buy {
+            background: #ff9800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-buy:hover {
+            background: #e68900;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar (Keeping it unchanged) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">SpiceHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Login
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'adminsignin' %}"><i class="fas fa-user-shield"></i> Admin</a></li>
+                            <li><a class="dropdown-item" href="{% url 'signin' %}"><i class="fas fa-store"></i> Seller</a></li>
+                            <li><a class="dropdown-item" href="{% url 'signin' %}"><i class="fas fa-tractor"></i> Farmer</a></li>
+                            <li><a class="dropdown-item" href="{% url 'store:productlist' %}"><i class="fas fa-globe"></i> Foreign Buyer</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Discover the World of Spices</h1>
+            <p>Fresh, organic, and exotic spices delivered to your doorstep.</p>
+            <a href="#" class="btn btn-explore">Explore Now</a>
+        </div>
+    </section>
+
+    <!-- Spice Products Section -->
+    <section class="spice-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Featured Spices</h2>
+            <div class="row">
+                <!-- Spice Card 1 -->
+                <div class="col-md-4">
+                    <div class="card spice-card">
+                        <img src="{% static 'img/Products/turmeric.jpeg' %}" class="card-img-top" alt="Turmeric">
+                        <div class="card-body">
+                            <h5 class="card-title">Turmeric</h5>
+                            <p class="card-text">Golden spice known for its medicinal properties.</p>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- Spice Card 2 -->
+                <div class="col-md-4">
+                    <div class="card spice-card">
+                        <img src="{% static 'img/Products/chinnamon.jpeg' %}" class="card-img-top" alt="Cinnamon">
+                        <div class="card-body">
+                            <h5 class="card-title">Cinnamon</h5>
+                            <p class="card-text">A sweet and aromatic spice used in baking.</p>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- Spice Card 3 -->
+                <div class="col-md-4">
+                    <div class="card spice-card">
+                        <img src="{% static 'img/Products/pep.jpeg' %}" class="card-img-top" alt="Black Pepper">
+                        <div class="card-body">
+                            <h5 class="card-title">Black Pepper</h5>
+                            <p class="card-text">The king of spices, used in all cuisines.</p>
+                            
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="row">
+                    <!-- Spice Card 1 -->
+                    <div class="col-md-4 p-5">
+                        <div class="card spice-card">
+                            <img src="{% static 'img/Products/star.jpeg' %}" class="card-img-top" alt="Turmeric">
+                            <div class="card-body">
+                                <h5 class="card-title">Turmeric</h5>
+                                <p class="card-text">Golden spice known for its medicinal properties.</p>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Spice Card 2 -->
+                    <div class="col-md-4 p-5">
+                        <div class="card spice-card">
+                            <img src="{% static 'img/Products/cloves.jpeg' %}" class="card-img-top" alt="Cinnamon">
+                            <div class="card-body">
+                                <h5 class="card-title">Cinnamon</h5>
+                                <p class="card-text">A sweet and aromatic spice used in baking.</p>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Spice Card 3 -->
+                    <div class="col-md-4 p-5">
+                        <div class="card spice-card">
+                            <img src="{% static 'img/Products/elanchi.jpeg' %}" class="card-img-top" alt="Black Pepper">
+                            <div class="card-body">
+                                <h5 class="card-title">Black Pepper</h5>
+                                <p class="card-text">The king of spices, used in all cuisines.</p>
+                                
+                            </div>
+                        </div>
+                   
+                    </div>
+                    </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+        <!-- Footer Section -->
+        <footer class="footer bg-dark text-white mt-5">
+            <div class="container py-4">
+                <div class="row">
+                    <!-- About Us -->
+                    <div class="col-md-4">
+                        <h5>About SpiceHub</h5>
+                        <p>We provide the finest and most authentic spices sourced from the best farms around the world.</p>
+                    </div>
+    
+                    <!-- Quick Links -->
+                    <div class="col-md-4">
+                        <h5>Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-white text-decoration-none">Home</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">About</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Contact</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Shop</a></li>
+                        </ul>
+                    </div>
+    
+                    <!-- Contact Info -->
+                    <div class="col-md-4">
+                        <h5>Contact Us</h5>
+                        <p><i class="fas fa-map-marker-alt"></i> 123 Sp
+    
+</body>
+</html>

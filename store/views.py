@@ -12,8 +12,37 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import stripe
+from django.conf import settings
 
+stripe.api_key = "your_stripe_secret_key"
+
+class StripeCheckoutView(View):
+    def post(self, request, *args, **kwargs):
+        order = Order.objects.get(id=kwargs.get("order_id"))
+        
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'inr',
+                    'product_data': {'name': 'Spices Order'},
+                    'unit_amount': int(order.order_total * 100),
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri(reverse('store:stripe-success', args=[order.id])),
+            cancel_url=request.build_absolute_uri(reverse('store:stripe-cancel', args=[order.id])),
+        )
+
+        order.stripe_payment_intent_id = session.payment_intent
+        order.save()
+
+        return redirect(session.url)
 # Create your views here.
+def render_razor_page(request):
+    return render(request, 'razorpay.html')
 
 class SpiceListView(View):
     
@@ -104,6 +133,14 @@ class DeleteCartItemView(View):
         messages.success(request, "Item removed")
         return redirect("store:cart-summary")
             
+from django.http import JsonResponse
+import razorpay
+
+import razorpay
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import Order  # Ensure you import your Order model
+
 class PlaceHolderView(View):
     
     template_name = "place_order.html"
@@ -120,59 +157,51 @@ class PlaceHolderView(View):
         return render(request, self.template_name, {"form": form_instance, "items": qs, "total": total})
     
     def post(self, request, *args, **kwargs):
-        
         form_data = request.POST
-        
         form_instance = self.form_class(form_data)
         
         if form_instance.is_valid():
-            
             form_instance.instance.customer = request.user
-            
             order_instance = form_instance.save()
             
             basket_items = request.user.cart.cart_item.filter(is_order_placed=False)
+            payment_method = form_instance.cleaned_data.get("payment_method")
             
-            payment_method = form_instance.cleaned_data.get("payment_method")         
-            print(payment_method)
-            
-            for bi in basket_items:
-                
-                OrderItem.objects.create(
-                    order_object=order_instance,
-                    spice_object=bi.spice_object,
-                    quantity=bi.quantity,
-                    price=bi.spice_object.price   
-                )
-                
-                bi.is_order_placed = True
-                
-                bi.save()
-
             if payment_method == "ONLINE":
-                
-                client = razorpay.Client(auth=("RZP_KEY_ID", "RZP_KEY_SECRET"))
-                
-                total = sum([bi.item_total for bi in basket_items]) * 100
+                try:
+                    # Use the same key consistently
+                    client = razorpay.Client(auth=("settings.RZP_KEY_ID", "settings.RZP_KEY_SECRET"))  # Add your Razorpay key here
+                    
+                    total = int(sum([bi.item_total for bi in basket_items]) * 100)
 
-                data = {"amount": total, "currency": "INR", "receipt": "order_rcptid_11"}
-                
-                payment = client.order.create(data=data)
-                
-                rzp_order_id = payment.get("id")
-                
-                order_instance.rzp_order_id = rzp_order_id
-                
-                order_instance.save()
-                
-                context = {
-                    "amount": total,
-                    "key_id":"shjbdbdkj",
-                    "order_id": rzp_order_id,
-                    "currency": "INR"
-                }
-                
-                return render(request, "payment.html", context)
+                    data = {
+                        "amount": total,
+                        "currency": "INR",
+                        "receipt": f"order_{order_instance.id}"
+                    }
+                    
+                    payment = client.order.create(data=data)
+                    
+                    order_instance.rzp_order_id = payment['id']
+                    order_instance.save()
+                    
+                    context = {
+                        "amount": total,
+                        "key_id": "settings.RZP_KEY_ID",  # Use the same key as above
+                        "order_id": payment['id'],
+                        "currency": "INR",
+                        "callback_url": request.build_absolute_uri(reverse('store:payment-verify')),
+                        "name": "Spice Store",
+                        "description": "Order Payment",
+                        "user": request.user
+                    }
+                    
+                    return render(request, "payment.html", context)
+                    
+                except Exception as e:
+                    print(f"Payment Error: {str(e)}")
+                    messages.error(request, "Payment initialization failed")
+                    return redirect('store:cart-summary')
         
         return redirect('store:productlist')               
         
@@ -188,29 +217,46 @@ class OrderSummaryView(View):
 
 @method_decorator(csrf_exempt, name="dispatch") 
 class PaymentVerificationView(View):
-    
     def post(self, request, *args, **kwargs):
-        
-        client = razorpay.Client(auth=(RZP_KEY_ID, RZP_KEY_SECRET))
         try:
-            client.utility.verify_payment_signature(request.POST)
-            print("payment success")
+            client = razorpay.Client(auth=("settings.RZP_KEY_ID", "settings.RZP_KEY_SECRET"))
             
-            order_id = request.POST.get("razorpay_order_id")
-            
-            order_object = Order.objects.get(rzp_order_id=order_id)
-            
-            order_object.is_paid = True
-            
-            order_object.save()
-            
-            login(request, order_object.customer)
-        except:
-            print("payment-failed")
-        
-        return redirect('order-summary')
+            # Get payment verification data
+            payment_id = request.POST.get('razorpay_payment_id')
+            order_id = request.POST.get('razorpay_order_id')
+            signature = request.POST.get('razorpay_signature')
+
+            # Create parameters dictionary
+            params_dict = {
+                'razorpay_payment_id': payment_id,
+                'razorpay_order_id': order_id,
+                'razorpay_signature': signature
+            }
+
+            try:
+                # Verify signature
+                client.utility.verify_payment_signature(params_dict)
+                
+                # Update order status
+                order = Order.objects.get(rzp_order_id=order_id)
+                order.payment_id = payment_id
+                order.is_paid = True
+                order.save()
+                
+                messages.success(request, "Payment successful!")
+                return redirect('store:order-summary')
+                
+            except Exception as e:
+                print(f"Signature Verification Error: {str(e)}")
+                messages.error(request, "Payment verification failed!")
+                return redirect('store:cart-summary')
+                
+        except Exception as e:
+            print(f"Payment Processing Error: {str(e)}")
+            messages.error(request, "Payment processing failed!")
+            return redirect('store:cart-summary')
     
     from django.http import HttpResponse
 
 def test_view(request):
-    return HttpResponse("Test view is working!")
+    return HttpResponse("Test view is working!")
