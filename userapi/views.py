@@ -62,11 +62,39 @@ class SignInView(FormView):
                 if usr.user_type == 'Admin':
                     return redirect('admin-login') 
 
-                elif usr.user_type in ['Farmer', 'Seller']:
+                elif usr.user_type in [ 'Seller']:
 
                     return redirect("auctions-list")
                 elif usr.user_type == 'Foreign_buyer':
-                    return redirect('products-list')
+                    return redirect('store:productlist')
+            else:
+                messages.error(request,"failed to login")
+                return render(request,self.template_name,{"form":form})
+
+
+
+class BuyerSignInView(FormView):
+    template_name="buyerlogin.html"
+    form_class=LoginForm
+    
+    def post(self,request,*args,**kwargs):
+        form=LoginForm(request.POST)
+        if form.is_valid():
+            uname=form.cleaned_data.get("username")
+            pwd=form.cleaned_data.get("password")
+            usr=authenticate(request,username=uname,password=pwd)
+            if usr:
+                login(request,usr)
+                messages.success(request,"login success")
+
+                if usr.user_type == 'Admin':
+                    return redirect('admin-login') 
+
+                elif usr.user_type in [ 'Seller']:
+
+                    return redirect("auctions-list")
+                elif usr.user_type == 'Foreign_buyer':
+                    return redirect('store:productlist')
             else:
                 messages.error(request,"failed to login")
                 return render(request,self.template_name,{"form":form})

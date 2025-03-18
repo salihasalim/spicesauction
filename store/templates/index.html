@@ -1,7 +1,10 @@
 {%extends 'b.html'%}
 
 {%block main_block%}
+
     <!-- banner -->
+    <a href="{% url 'auctions-list'%}" style="background-color: rgb(204, 134, 30); border: 2px solid rgb(248, 247, 247) ; color: rgb(19, 17, 17); padding: 0px 9px; font-weight: bold;" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white  rounded-lg  focus:ring-4 focus:outline-none "><i class="fa-solid fa-arrow-left"></i> Go to Spices Auction</a>
+
     <section
     class="relative h-[80vh] overflow-hidden bg-[url(https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=2670&auto=format&fit=crop)] bg-cover bg-center bg-no-repeat"
   >
@@ -13,7 +16,7 @@
       <!-- Logo -->
       <div class="mb-6">
         <img
-          src="https://via.placeholder.com/150"
+          src="https://i.pinimg.com/736x/ed/ad/5e/edad5ee15f0b67915077641e8daafa7e.jpg"
           alt="Spice Bazaar Logo"
           class="mx-auto h-20 w-20 rounded-full border-4 border-amber-500 shadow-lg"
         />
@@ -37,7 +40,7 @@
       <!-- CTA Buttons -->
       <div class="mt-8 flex flex-wrap justify-center gap-4">
         <a
-          href="#"
+          href="#products"
           class="rounded-lg bg-gradient-to-r from-amber-500 to-red-600 px-8 py-4 text-base font-semibold text-white shadow-md transition hover:from-amber-600 hover:to-red-700 focus:outline-none focus:ring-4 focus:ring-amber-300"
         >
           Shop Now
@@ -57,9 +60,9 @@
    <!-- product-list -->
    <section>
      <div class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8" id="collections">
-       <header class="text-center">
+       <header class="text-center" id ="products">
          <h2 class="text-3xl font-extrabold text-amber-900 sm:text-4xl">Spice Collection</h2>
-         <p class="mt-4 text-gray-600">
+         <p class="mt-4 text-gray-600" >
            Explore our carefully curated selection of premium spices, herbs, and blends that will transform your cooking.
          </p>
        </header>
@@ -122,7 +125,7 @@
 
        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ">
          {%for p in page_obj.object_list %}
-         <li>
+         <li >
              <a href="{%url 'store:product-detail' p.id %}" class="group block overflow-hidden">
                {%if p.picture%}
                <img

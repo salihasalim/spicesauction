@@ -55,10 +55,10 @@
         {%for bi in basket_items%}
         <div class="md:flex items-stretch py-6 md:py-8 border-t border-amber-100">
           {%if bi.spice_object.picture%}
-          <div class="md:w-1/3 w-full">
+          <a href="{% url 'store:product-detail' bi.spice_object.id %}"><div class="md:w-1/3 w-full">
             <img src="{{bi.spice_object.picture.url}}" alt="{{bi.spice_object.title}}" class="h-full object-cover md:block hidden rounded-lg" />
             <img src="{{bi.spice_object.picture.url}}" alt="{{bi.spice_object.title}}" class="md:hidden w-full h-48 object-cover rounded-lg" />
-          </div>
+          </div></a>
           {%else%}
           <div class="md:w-1/3 w-full">
             <img src="https://images.unsplash.com/photo-1635361184978-12e4b5ad6249?ixlib=rb-1.2.1&auto=format&fit=crop&w=1770&q=80" alt="Default Spice Image" class="h-full object-cover md:block hidden rounded-lg" />
@@ -123,7 +123,7 @@
             <span class="text-amber-900">₹{{basket_total}}</span>
           </div>
           
-          <a href="{%url 'store:place-order'%}">
+          <a href="{%url 'store:place-order' %}">
             <button class="rounded-lg bg-gradient-to-r from-amber-500 to-red-600 px-8 py-4 text-base font-semibold text-white shadow-md transition hover:from-amber-600 hover:to-red-700 focus:outline-none focus:ring-4 focus:ring-amber-300 w-full">
               Checkout
             </button>

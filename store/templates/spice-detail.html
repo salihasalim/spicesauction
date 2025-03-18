@@ -54,29 +54,6 @@
         src="https://images.unsplash.com/photo-1535083783855-76ae62b2914e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHwyfHxwbGFudHxlbnwwfDB8fHwxNzI1MjA1NjkwfDA&ixlib=rb-4.0.3&q=80&w=1080"
         alt="Species" class="w-full h-auto rounded-lg shadow-md mb-4" id="mainImage">
     {%endif%}
-
-      <div class="flex gap-4 py-4 justify-center overflow-x-auto">
-        <img
-          src="https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHwxMnx8cGxhbnR8ZW58MHwwfHx8MTcyNTIwNTY5MHww&ixlib=rb-4.0.3&q=80&w=1080"
-          alt="Thumbnail 1"
-          class="size-16 sm:size-20 object-cover rounded-md cursor-pointer opacity-60 hover:opacity-100 transition duration-300"
-          onclick="changeImage(this.src)">
-        <img
-          src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw0fHxwbGFudHxlbnwwfDB8fHwxNzI1MjA1NjkwfDA&ixlib=rb-4.0.3&q=80&w=1080"
-          alt="Thumbnail 2"
-          class="size-16 sm:size-20 object-cover rounded-md cursor-pointer opacity-60 hover:opacity-100 transition duration-300"
-          onclick="changeImage(this.src)">
-        <img
-          src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw4fHxwbGFudHxlbnwwfDB8fHwxNzI1MjA1NjkwfDA&ixlib=rb-4.0.3&q=80&w=1080"
-          alt="Thumbnail 3"
-          class="size-16 sm:size-20 object-cover rounded-md cursor-pointer opacity-60 hover:opacity-100 transition duration-300"
-          onclick="changeImage(this.src)">
-        <img
-          src="https://images.unsplash.com/photo-1545239705-1564e58b9e4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHwzfHxwbGFudHxlbnwwfDB8fHwxNzI1MjA1NjkwfDA&ixlib=rb-4.0.3&q=80&w=1080"
-          alt="Thumbnail 4"
-          class="size-16 sm:size-20 object-cover rounded-md cursor-pointer opacity-60 hover:opacity-100 transition duration-300"
-          onclick="changeImage(this.src)">
-      </div>
     </div>
 
     <!-- Species Details -->
@@ -171,15 +148,13 @@
             </svg>
             Add to Cart
           </button>
-          <a href="{%url 'store:place-order'%}"
-            class="bg-gray-200 flex gap-2 items-center text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-            <!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="size-6"> -->
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-            </svg>
-            Buynow
-          </a>
+          <a id="buyNowButton" href="{% url 'store:place-order' %}?id={{ data.id }}&quantity=1"
+          class="bg-gray-200 flex gap-2 items-center text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+          </svg>
+          Buy Now
+        </a>
         </div>
         <!-- add to cart/wishlist ends -->
       </form>
@@ -194,5 +169,12 @@
     document.getElementById('mainImage').src = src;
   }
 </script>
-
+<script>
+  document.getElementById('quantity').addEventListener('input', function () {
+    let quantity = this.value;
+    let buyNowButton = document.getElementById('buyNowButton');
+    let productId = "{{ data.id }}"; // Get product ID from Django template
+    buyNowButton.href = `{% url 'store:place-order' %}?id=${productId}&quantity=${quantity}`;
+  });
+</script>
 {%endblock%}

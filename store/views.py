@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from django.shortcuts import redirect, render
 from django.views.generic import View, TemplateView, FormView
 import razorpay
@@ -12,35 +12,11 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-import stripe
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
-stripe.api_key = "your_stripe_secret_key"
 
-class StripeCheckoutView(View):
-    def post(self, request, *args, **kwargs):
-        order = Order.objects.get(id=kwargs.get("order_id"))
-        
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'inr',
-                    'product_data': {'name': 'Spices Order'},
-                    'unit_amount': int(order.order_total * 100),
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url=request.build_absolute_uri(reverse('store:stripe-success', args=[order.id])),
-            cancel_url=request.build_absolute_uri(reverse('store:stripe-cancel', args=[order.id])),
-        )
-
-        order.stripe_payment_intent_id = session.payment_intent
-        order.save()
-
-        return redirect(session.url)
-# Create your views here.
 def render_razor_page(request):
     return render(request, 'razorpay.html')
 
@@ -78,6 +54,9 @@ class SpiceDetailView(View):
         return render(request, self.template_name, {"data": qs})
         
 class AddtoCartView(View):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
         
     def post(self, request, *args, **kwargs):
         
@@ -141,53 +120,112 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Order  # Ensure you import your Order model
 
+from django.db import transaction
+from django.urls import reverse
+from django.shortcuts import render, redirect
+from django.db import transaction
+from django.conf import settings
+from django.contrib import messages
+import razorpay
+from .models import BasketItem, Order, OrderItem, Basket
+from .forms import OrderForm
+from django.urls import reverse
+
 class PlaceHolderView(View):
-    
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
     template_name = "place_order.html"
-    
     form_class = OrderForm
-    def get(self, request, *args, **kwargs):
-        
-        form_instance = self.form_class()
-        
-        qs = request.user.cart.cart_item.filter(is_order_placed=False)
-        
-        total = sum([bi.item_total for bi in qs])
-        
-        return render(request, self.template_name, {"form": form_instance, "items": qs, "total": total})
     
+
+    def get(self, request, *args, **kwargs):
+        form_instance = self.form_class()
+        print('==========hai')
+        print(request.user)
+
+        spice_id = request.GET.get("id")
+        qty = request.GET.get('quantity')  # Fetch `id` from query parameters
+        s = None
+
+
+        if spice_id and qty:  # Only fetch and create BasketItem if id is provided
+            try:
+                s = Spice.objects.get(id=spice_id)
+                BasketItem.objects.create(spice_object=s, quantity=qty, basket_object=request.user.cart)
+            except Spice.DoesNotExist:
+                return HttpResponse("Invalid Spice ID", status=400)
+
+        qs = BasketItem.objects.filter(basket_object=request.user.cart, is_order_placed=False)
+
+        total = sum([bi.item_total for bi in qs])  # Total of the cart items
+        print(total)
+        return render(request, self.template_name, {"form": form_instance, "items": qs, "total": total,"s":s})
+
     def post(self, request, *args, **kwargs):
         form_data = request.POST
         form_instance = self.form_class(form_data)
-        
+
         if form_instance.is_valid():
             form_instance.instance.customer = request.user
             order_instance = form_instance.save()
-            
+
+            # Fetch basket items that haven't been ordered yet
             basket_items = request.user.cart.cart_item.filter(is_order_placed=False)
+            print("basket", basket_items)
+
             payment_method = form_instance.cleaned_data.get("payment_method")
-            
+            print("method", payment_method)
+
+            # Process payment if it's online
+            print()
             if payment_method == "ONLINE":
                 try:
-                    # Use the same key consistently
-                    client = razorpay.Client(auth=("settings.RZP_KEY_ID", "settings.RZP_KEY_SECRET"))  # Add your Razorpay key here
-                    
-                    total = int(sum([bi.item_total for bi in basket_items]) * 100)
+                    # Initialize Razorpay client
+                    client = razorpay.Client(auth=("rzp_test_IzIBFTmzd3zzKk", "mMvIdZd7a4EU1pMd9tSQEbE0"))
+                    print(client)
 
+                    total_in_paise = float(sum([bi.item_total for bi in basket_items])*100)  # Amount in paise
+                    print(total_in_paise)
                     data = {
-                        "amount": total,
+                        "amount": total_in_paise,
                         "currency": "INR",
                         "receipt": f"order_{order_instance.id}"
                     }
-                    
+
+                    # Create a Razorpay order
                     payment = client.order.create(data=data)
-                    
-                    order_instance.rzp_order_id = payment['id']
-                    order_instance.save()
-                    
+                    with transaction.atomic():
+                    # Create OrderItems for each BasketItem
+                        for basket_item in basket_items:
+                            OrderItem.objects.create(
+                                order_object=order_instance,  # Set the order for the item
+                                spice_object=basket_item.spice_object,
+                                quantity=basket_item.quantity,
+                                price=basket_item.spice_object.price
+                            )
+
+                            # Mark the basket item as ordered
+                            basket_item.is_order_placed = True
+                            basket_item.save()
+
+                        # Set the basket for the order
+                        bas = get_object_or_404(Basket, id=request.user.cart.id)
+                        print("mmmmmmmmmmmmm", bas)
+                        order_instance.baskets = bas
+
+                        # Set the order as paid and update the status to "Completed"
+                        order_instance.is_paid = True
+                        order_instance.status = "Completed"
+                        
+                        # Save Razorpay order ID to the order instance
+                        order_instance.rzp_order_id = payment['id']
+                        order_instance.save()
+
+                    # Context for the payment page
                     context = {
-                        "amount": total,
-                        "key_id": "settings.RZP_KEY_ID",  # Use the same key as above
+                        "amount": total_in_paise,  # Pass the amount in paise (already multiplied by 100)
+                        "key_id": "rzp_test_IzIBFTmzd3zzKk",  # Use actual Razorpay Key ID
                         "order_id": payment['id'],
                         "currency": "INR",
                         "callback_url": request.build_absolute_uri(reverse('store:payment-verify')),
@@ -195,31 +233,74 @@ class PlaceHolderView(View):
                         "description": "Order Payment",
                         "user": request.user
                     }
-                    
-                    return render(request, "payment.html", context)
-                    
+
+                    # Render payment page for online payment
+                    return render(request, "razorpay.html", context)
+
                 except Exception as e:
                     print(f"Payment Error: {str(e)}")
                     messages.error(request, "Payment initialization failed")
                     return redirect('store:cart-summary')
-        
-        return redirect('store:productlist')               
+
+            else:  # Handling case for other payment methods (like 'CASH' or others)
+                # Using a transaction to ensure that all items are ordered correctly
+                with transaction.atomic():
+                    # Create OrderItems for each BasketItem
+                    for basket_item in basket_items:
+                        OrderItem.objects.create(
+                            order_object=order_instance,  # Set the order for the item
+                            spice_object=basket_item.spice_object,
+                            quantity=basket_item.quantity,
+                            price=basket_item.spice_object.price
+                        )
+
+                        # Mark the basket item as ordered
+                        basket_item.is_order_placed = True
+                        basket_item.save()
+
+                    # Set the basket for the order
+                    bas = get_object_or_404(Basket, id=request.user.cart.id)
+                    print("mmmmmmmmmmmmm", bas)
+                    order_instance.baskets = bas
+
+                    # Set the order as paid and update the status to "Completed"
+                    order_instance.is_paid = True
+                    order_instance.status = "Completed"
+                    order_instance.save()
+
+                    # Success message and redirect to the order summary page
+                    messages.success(request, "Your order has been placed successfully!")
+                    return redirect('store:order-summary')
+
+        # In case the form is not valid, redirect to cart page
+        messages.error(request, "There was an error with your order. Please try again.")
+        return redirect('store:cart-summary')
+
+
+          
         
 class OrderSummaryView(View):
-    
     template_name = "order_summary.html"
     
     def get(self, request, *args, **kwargs):
+        # Filter orders based on the 'Completed' status
+        qs = Order.objects.filter(customer=request.user, status="Completed").order_by('-created_at')  # Corrected status value
+        print(qs)
         
-        qs = reversed(request.user.orders.all())
+        if not qs.exists():
+            messages.info(request, "You have no completed orders.")
         
-        return render(request, self.template_name, {"orders": qs})   
+        # Fetch all the OrderItems for the orders in the queryset 'qs'
+        items = OrderItem.objects.filter(order_object__in=qs)  # Use '__in' to filter based on multiple orders
+        
+        return render(request, self.template_name, {"orders": qs, "items": items})
+
 
 @method_decorator(csrf_exempt, name="dispatch") 
 class PaymentVerificationView(View):
     def post(self, request, *args, **kwargs):
         try:
-            client = razorpay.Client(auth=("settings.RZP_KEY_ID", "settings.RZP_KEY_SECRET"))
+            client = razorpay.Client(auth=("rzp_test_IzIBFTmzd3zzKk", "mMvIdZd7a4EU1pMd9tSQEbE0"))
             
             # Get payment verification data
             payment_id = request.POST.get('razorpay_payment_id')
@@ -260,3 +341,12 @@ class PaymentVerificationView(View):
 
 def test_view(request):
     return HttpResponse("Test view is working!")
+
+
+def about(request):
+    return render(request,'about.html')
+
+
+
+def contact(request):
+    return render(request,'contact.html')

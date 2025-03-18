@@ -38,6 +38,7 @@ STRIPE_SECRET_KEY = "your_secret_key"
 # Application definition
 
 INSTALLED_APPS = [
+    # 'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -146,5 +147,7 @@ EMAIL_HOST_PASSWORD = 'varmqoyeipvotdre'
 
 
 
-RZP_KEY_ID = "rzp_test_1bsos7mtrvFh3G"
-RZP_KEY_SECRET = "e0caKFDxuZNumeK6G2Ir4G1z"
+RZP_KEY_ID = "rzp_test_IzIBFTmzd3zzKk"
+RZP_KEY_SECRET = "mMvIdZd7a4EU1pMd9tSQEbE0"
+
+LOGIN_URL = 'signin'

@@ -63,6 +63,7 @@ def create_basket(sender,instance,created,**kwargs):
 post_save.connect(create_basket,CustomUser)
    
 class Order(BaseModel):
+    baskets = models.ForeignKey(Basket, on_delete=models.CASCADE,related_name='order_basket',null=True)
     customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
     address = models.TextField(null=True)
     phone = models.CharField(null=True,max_length=20)
@@ -76,6 +77,7 @@ class Order(BaseModel):
     signature_id = models.CharField(max_length=100, null=True, blank=True)  # Add this field
     is_paid = models.BooleanField(default=False)
     status = models.CharField(max_length=20, default='pending')  # Add this field
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
     
     @property
     def order_total(self):

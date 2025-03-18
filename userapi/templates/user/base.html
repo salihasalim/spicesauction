@@ -68,7 +68,7 @@
                             <a href="{%url 'auctions-list'%}" class="nav-item nav-link active">Home</a>
                             <a href="{%url 'products-list'%}" class="nav-item nav-link">products</a>
                             <a href="{%url 'bid-list'%}" class="nav-item nav-link">Bids</a>
-                            <a href="{%url 'wonbids' %}" class="nav-item nav-link">payments</a>
+                            {% comment %} <a href="{%url 'wonbids' %}" class="nav-item nav-link">payments</a> {% endcomment %}
                             <a href="{%url 'feedback-add' %}" class="nav-item nav-link">feedback</a>
                             <a href="{% url 'store:productlist' %}" class="nav-item nav-link">Store</a>
                         </div>

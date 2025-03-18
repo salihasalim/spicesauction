@@ -15,6 +15,9 @@ urlpatterns=[
     path('place-order/',views.PlaceHolderView.as_view(),name="place-order"),
     path('razorpay/',views.render_razor_page,name='razorpay'),
     path('order-summary/',views.OrderSummaryView.as_view(),name="order-summary"),
+    path('payment-verify/',views.PaymentVerificationView.as_view(),name="payment-verify"),
+    path('about',views.about,name='about-1'),
+    path('contact',views.contact,name='contact-1')
    
     # 
     # In your urls.py
