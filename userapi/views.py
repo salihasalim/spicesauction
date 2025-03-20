@@ -445,4 +445,82 @@ def logoutuser(request,*args,**kwargs):
 
 
 
+import re
+import groq
+    
+client =groq.Client(api_key="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")
+
+
+def get_groq_response(user_input):
+    """
+    Communicate with the GROQ chatbot to get a response based on user input.
+    """
+    system_prompt = {
+        "role": "system",
+        "content": "You are a helpful assistant. You reply with very short answers ."
+    }
+
+    chat_history = [system_prompt]
+
+    # Append user input to the chat history
+    chat_history.append({"role": "user", "content": user_input})
+
+    # Get response from GROQ API
+    chat_completion = client.chat.completions.create(
+        model="llama3-70b-8192",
+        messages=chat_history,
+        max_tokens=100,
+        temperature=.5
+    )
+
+    response = chat_completion.choices[0].message.content
+    print(response)
+    # Format response (convert bold to <b>bold</b>)
+    response = re.sub(r'\\(.?)\\*', r'<b>\1</b>', response)
+
+    return response
+
+
+import json
+from django.http import JsonResponse
+
+class ChatbotView(View):
+    def get(self, request):
+        return render(request, "user/chatbot.html")
+    def post(self, request): 
+        try:
+            body = json.loads(request.body)
+            user_input = body.get('userInput')
+        except json.JSONDecodeError as e:
+            return JsonResponse({"error": "Invalid JSON format."})
+    
+        if not user_input:  # If user_input is None or empty
+            print("no")
+            return JsonResponse({"error": "No user input provided."})  
+        
+        print("User Input:", user_input)
+        
+        static_responses = {
+            "hi": "Hello! How can I assist you today?",
+            "hello": "Hi there! How can I help you?",
+            "how are you": "I'm just a chatbot, but I'm doing great! How about you?",
+            "bye": "Goodbye! Take care.",
+            "whats up": "Not much, just here to help you with  queries. How can I help you today?",
+        }
+
+        lower_input = user_input.lower().strip()
+        if lower_input in static_responses:
+            print(static_responses[lower_input])
+            return JsonResponse({'response': static_responses[lower_input]})
+        
+        try:
+            print("Processing via GROQ")
+            data = get_groq_response(user_input)
+            print(data)
+            treatment_list = data.split('\n')
+            return JsonResponse({'response': treatment_list})
+        except Exception as e:
+            return JsonResponse({"error": f"Failed to get GROQ response: {str(e)}"})
+
+
 
