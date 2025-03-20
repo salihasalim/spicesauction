@@ -1,0 +1,101 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Auctions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Currently Running Auctions</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Spice</th>
+            <th>Starting Price</th>
+            <th>Highest Bid</th>
+            <th>End Time</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for auction in auctions %}
+        <tr>
+            <td>{{ auction.spice.name }}</td>
+            <td>₹{{ auction.starting_bid }}</td>
+            <td id="highest_bid_{{ auction.id }}">
+                {% if highest_bids|get_item:auction.id %}₹{{ highest_bids|get_item:auction.id }}{% else %}No bids{% endif %}
+            </td>
+            
+            <td>{{ auction.end_time }}</td>
+            <td>
+                <a href="{% url 'auction-detail' auction.id %}">Place Bid</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No active auctions.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- JavaScript for real-time bid updates -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function updateBids() {
+        fetch("{% url 'get-highest-bids' %}")
+            .then(response => response.json())
+            .then(data => {
+                for (const [auction_id, bid] of Object.entries(data)) {
+                    document.getElementById("highest_bid_" + auction_id).innerText = "₹" + bid;
+                }
+            });
+    }
+
+    // Refresh bid data every 5 seconds
+    setInterval(updateBids, 5000);
+</script>
+
+</body>
+</html>

@@ -31,7 +31,7 @@
         <script src="https://kit.fontawesome.com/c74c679b1d.js" crossorigin="anonymous"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-
+        {% block extra_css %}{% endblock %}
 
     </head>
 
@@ -48,6 +48,7 @@
                         <small class="me-3"><i class="fas fa-map-marker-alt me-2 "></i> <a href="#" class="text-white">Ernakulam, Gandhinagar</a></small>
                         <small class="me-3"><i class="fas fa-envelope me-2"></i><a href="#" class="text-white">spicesauction@gmail.com</a></small>
                     </div>
+                    {% comment %} <a href="{% url 'running-auctions' %}">Running Auctions</a> {% endcomment %}
                     <div class="top-link pe-2" >
                        
                         {% if request.session.username %}

@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from reportlab.pdfgen import canvas
 import io
 from django.utils import timezone
-from django.utils import timezone
+from django.utils.timezone import now
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
@@ -165,7 +165,44 @@ class BidsListView(ListView):
         user_id = self.request.user.id
         return Bid.objects.filter(auction__auctioneer_id=user_id)
 
-    
+
+
+from django.views.generic import ListView
+from django.http import JsonResponse
+from django.shortcuts import render
+from adminapi.models import Auction, Bid
+
+class RunningAuctionsListView(ListView):
+    model = Auction
+    template_name = "running_auctions.html"
+    context_object_name = "auctions"
+
+    def get_queryset(self):
+        """Return only active auctions"""
+        return Auction.objects.filter(status="available")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get highest bid for each auction
+        highest_bids = {}
+        for auction in context["auctions"]:
+            highest_bid = Bid.objects.filter(auction=auction).order_by("-amount").first()
+            highest_bids[auction.id] = highest_bid.amount if highest_bid else "No bids"
+
+        context["highest_bids"] = highest_bids
+        return context
+
+# API endpoint for real-time bid updates
+def get_highest_bids(request):
+    auctions = Auction.objects.filter(status="available")
+    highest_bids = {}
+
+    for auction in auctions:
+        highest_bid = Bid.objects.filter(auction=auction).order_by("-amount").first()
+        highest_bids[auction.id] = highest_bid.amount if highest_bid else "No bids"
+
+    return JsonResponse(highest_bids)
 
 class ProductsListView(ListView):
     template_name="user/products.html"
